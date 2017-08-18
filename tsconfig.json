@@ -1,0 +1,33 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "baseUrl": "./",
+        "module": "commonjs",
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "noUnusedParameters": true,
+        "noUnusedLocals": true,
+        "target": "es6",
+        "outDir": "./dist",
+        "typeRoots": [
+            "node_modules/@types",
+            "./typing"
+        ],
+        "lib": [
+            "es7",
+            "dom"
+        ]
+    },
+    "include": [
+        "src/**/*",
+        "tests/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

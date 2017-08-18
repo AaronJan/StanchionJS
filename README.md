@@ -1,37 +1,39 @@
-## Welcome to GitHub Pages
+# StanchionJS
 
-You can use the [editor on GitHub](https://github.com/AaronJan/Stanchion/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+**[Work in progress]**
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+A simple & fast queue done right. backed by Redis, supports auto-reconnect, TypeScript, Promise and Rxjs.
 
-### Markdown
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Features
 
-```markdown
-Syntax highlighted code block
+- **Fast.** Just `BLPOP` and `RPUSH`, no other fancy stuff, simple and fast.
 
-# Header 1
-## Header 2
-### Header 3
+- **Auto-Reconnect.**
 
-- Bulleted
-- List
+- **Works with Promise.** Unleash the power of `async / await`, say bye-bye to callback.
 
-1. Numbered
-2. List
+- **Better error handling.**
 
-**Bold** and _Italic_ and `Code` text
+- **Written in TypeScript.** No hacky code and provides better experience if you are using `TypeScript`.
 
-[Link](url) and ![Image](src)
+- **Reactive.** If you don't like making promises, there're reactive APIs too.
+
+
+## Installation
+
+```
+$ npm i stanchionjs
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-### Jekyll Themes
+## Examples
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/AaronJan/Stanchion/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+TODO
 
-### Support or Contact
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+## Credits
+
+Awesome icon by [Freepik](http://www.freepik.com), licensed under the [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0/).
+
+Inspired by [Neamar/featureless-job-queue](https://github.com/Neamar/featureless-job-queue).

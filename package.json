@@ -1,0 +1,42 @@
+{
+  "name": "stanchionjs",
+  "version": "0.9.0",
+  "description": "A simple & fast queue done right. backed by Redis, supports auto-reconnect, TypeScript, Promise and Rxjs.",
+  "keywords": [
+    "stanchionjs",
+    "stanchion",
+    "queue",
+    "typescript",
+    "rxjs",
+    "reactive"
+  ],
+  "homepage": "https://github.com/AaronJan/StanchionJS",
+  "bugs": {
+    "url": "https://github.com/AaronJan/StanchionJS/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "test": "tsc && mocha dist/tests/**/*.test.js"
+  },
+  "author": {
+    "name": "AaronJan",
+    "url": "https://github.com/AaronJan"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "redis": "^2.8.0",
+    "rxjs": "^5.4.3"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.3",
+    "@types/mocha": "^2.2.41",
+    "@types/redis": "^2.6.0",
+    "@types/sinon": "^2.3.3",
+    "chai": "^4.1.1",
+    "mocha": "^3.5.0",
+    "sinon": "^3.2.1",
+    "typescript": "^2.4.2"
+  },
+  "node": ">= 7.0.0"
+}
