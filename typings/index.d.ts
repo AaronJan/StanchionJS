@@ -21,7 +21,6 @@ export interface RedisOptions {
 export interface Options {
     redis: RedisOptions,
     concurrency: number,
-    prefetchRatio: number,
     redisKey: string,
     retryAttempts: number,
 }

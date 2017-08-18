@@ -37,7 +37,6 @@ const defaultOptions: Options = {
         port: 6739,
     },
     concurrency: 10,
-    prefetchRatio: 1.2,
     redisKey: 'stanchion:queue',
     retryAttempts: 6,
 };
@@ -205,7 +204,7 @@ class Stanchion implements StanchionContract {
         const redisKey = this.options.redisKey;
 
         return Observable.create((observer: Observer<void>) => {
-            let tickets = Math.ceil(self.options.concurrency * self.options.prefetchRatio);
+            let tickets = self.options.concurrency;
             const buffer$ = new Subject<object>();
             const done$ = new Subject<void>();
             const fetching$ = new Subject<void>();

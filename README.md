@@ -225,13 +225,14 @@ Default value:
         host: '127.0.0.1',
         port: 6739,
     },
-    // If you have lots of I/O intensive job, increase this may help.
+
+    // If you have lots of I/O intensive jobs, increase this may help.
     concurrency: 10,
-    // `concurrency` * `prefetchRatio` = how many Redis command will be emitted.
-    prefetchRatio: 1.2,
+    
     // Redis key for this queue.
     redisKey: 'stanchion:queue',
-    // How many times you want Stanchion to reconnecting when connection lost.
+    
+    // How many times you want Stanchion to try reconnecting when connection is lost.
     retryAttempts: 6,
 }
 ```
