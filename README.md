@@ -1,4 +1,14 @@
-# StanchionJS
+<h1 align=center>
+    <img alt="StanchionJS" src="https://aaronjan.github.io/StanchionJS/docs/logo-by-freepik.png">
+    <br>
+    StanchionJS
+</h1>
+
+
+<p align=center>
+<a href="https://www.npmjs.com/package/stanchionjs"><img src="https://img.shields.io/npm/v/stanchionjs.svg?style=flat" alt="npm version"></a>
+</p>
+
 
 **[Work in progress]**
 
