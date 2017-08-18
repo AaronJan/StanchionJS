@@ -7,3 +7,4 @@ tests/
 package-lock.json
 dist/**/*.js.map
 _config.yml
+.vscode/
