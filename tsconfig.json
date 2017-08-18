@@ -3,7 +3,7 @@
         "strict": true,
         "baseUrl": "./",
         "module": "commonjs",
-        "removeComments": true,
+        "removeComments": false,
         "preserveConstEnums": true,
         "sourceMap": true,
         "noFallthroughCasesInSwitch": true,

@@ -1,3 +1,4 @@
+dist/tests/
 src/
 debug/
 docs/
@@ -5,3 +6,4 @@ node_modules/
 tests/
 package-lock.json
 dist/**/*.js.map
+_config.yml
