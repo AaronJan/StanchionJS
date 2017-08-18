@@ -48,7 +48,7 @@ const defaultOptions: Options = {
 const overwriteRedisOptions: Redis.ClientOpts = {
     return_buffers: false,
     retry_unfulfilled_commands: false,
-    enable_offline_queue: false,
+    enable_offline_queue: true,
     detect_buffers: false,
 };
 
@@ -56,7 +56,7 @@ const overwriteRedisOptions: Redis.ClientOpts = {
 /**
  * Stanchion
  */
-export default class Stanchion implements StanchionContract {
+class Stanchion implements StanchionContract {
 
     protected shutdowned = false;
 
@@ -389,3 +389,7 @@ export default class Stanchion implements StanchionContract {
     }
 
 }
+
+export {
+    Stanchion,
+};

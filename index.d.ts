@@ -5,17 +5,7 @@
  * https://github.com/AaronJan/StanchionJS
  * -------------------------------------------------------------------------- */
 
-import {
-    Options,
+export {
     ConstructOptions,
     Stanchion,
 } from './typings';
-
-
-declare module 'Stanchion' {
-    export {
-        Stanchion,
-        Options,
-        ConstructOptions,
-    };
-}
