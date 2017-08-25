@@ -329,6 +329,10 @@ onShutdowned$(): Observable<void>
 
 - Tests.
 
+- Multiple queue(Redis key) support.
+
+- "unprocess" method.
+
 
 ## Credits
 
