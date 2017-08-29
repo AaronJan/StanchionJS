@@ -94,7 +94,9 @@ class Stanchion implements StanchionContract {
         const connection = new Connection(this.redisOptions, this.options.retryAttempts);
 
         connection.onDisconnecting$().subscribe(() => {
-            this.error$.next(new DisconnectingError(`Connection disconnected.`));
+            if (this.shutdowned === false) {
+                this.error$.next(new DisconnectingError(`Connection disconnected.`));
+            }
         });
 
         return connection;
