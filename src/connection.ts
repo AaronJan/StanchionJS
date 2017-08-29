@@ -54,7 +54,7 @@ class Connection {
                     return new Error(`too many Redis reconnecting attempts`);
                 }
 
-                return Math.min(options.attempt * 100, 3000);
+                return Math.min(options.attempt * 500, 3000);
             },
         };
 

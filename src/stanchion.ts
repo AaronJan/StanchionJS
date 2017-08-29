@@ -206,7 +206,8 @@ class Stanchion implements StanchionContract {
         const redisKey = this.options.redisKey;
 
         return Observable.create((observer: Observer<void>) => {
-            let tickets = self.options.concurrency;
+            const maxTicketCount = self.options.concurrency;
+            let availableTicketCount = maxTicketCount;
             const buffer$ = new Subject<object>();
             const done$ = new Subject<void>();
             const fetching$ = new Subject<void>();
@@ -224,8 +225,8 @@ class Stanchion implements StanchionContract {
                     done$.next();
                 },
                 error: (err: any) => {
-                    done$.next();
                     self.error$.next(err);
+                    done$.next();
                 },
             });
 
@@ -234,7 +235,7 @@ class Stanchion implements StanchionContract {
             //
 
             const onDoneSub = done$.subscribe(() => {
-                tickets++;
+                availableTicketCount++;
 
                 if (connection.redis.connected === true) {
                     fetching$.next();
@@ -242,26 +243,23 @@ class Stanchion implements StanchionContract {
             });
 
             const onFetchingSub = fetching$.subscribe(() => {
-                if (tickets <= 0) {
+                if (availableTicketCount <= 0) {
                     return void self.error$.next(new UnexpectError(`over fetching`));
                 }
 
-                tickets--;
+                availableTicketCount--;
 
                 blpop$(redisKey, 0).subscribe({
                     next: function unserializeJob([, serialized]) {
                         try {
                             buffer$.next(JSON.parse(serialized));
                         } catch (err) {
-                            done$.next();
                             self.error$.next(err);
+                            done$.next();
                         }
                     },
                     error: (err) => {
                         self.error$.next(err);
-                        done$.next();
-                    },
-                    complete: () => {
                         done$.next();
                     },
                 });
@@ -274,7 +272,7 @@ class Stanchion implements StanchionContract {
             const onConnectionReadySub = connection.onReady$()
                 .subscribe({
                     next: () => {
-                        Observable.range(1, tickets).subscribe(() => fetching$.next());
+                        Observable.range(1, availableTicketCount).subscribe(() => fetching$.next());
                     },
                     error: (err) => {
                         self.error$.next(err);
@@ -287,7 +285,7 @@ class Stanchion implements StanchionContract {
                 });
 
             const onConnectionCuttedSub = connection.onCutted$()
-                .filter(cutted => cutted === true)
+                .filter(isBoolean(true))
                 .subscribe(() => {
                     const err = new Error(`connection cutted`);
 
