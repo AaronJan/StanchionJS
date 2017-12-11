@@ -327,11 +327,13 @@ onShutdowned$(): Observable<void>
 
 ## TODOs
 
-- Tests.
+- Tests. Although Stanchion is bettle-tested, handling about 26K jobs per second.
 
-- Multiple queue(Redis key) support.
+- Multiple queue (Redis key) support.
 
 - "unprocess" method.
+
+- Key-sharding support for cluster usage.
 
 
 ## Credits
