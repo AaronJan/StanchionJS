@@ -25,6 +25,8 @@ import {
 import {
     isBoolean,
     noop,
+    randomInArray,
+    shuffleArray,
 } from './helper';
 
 
@@ -39,6 +41,7 @@ const defaultOptions: Options = {
     concurrency: 10,
     redisKey: 'stanchion:queue',
     retryAttempts: 6,
+    shuffleKeysOnPop: true,
 };
 
 /**
@@ -67,6 +70,10 @@ class Stanchion implements StanchionContract {
     protected error$: Subject<any>;
     protected shutdowned$: Subject<any>;
 
+    protected useSingleRedisKey: boolean;
+    protected redisKey: string;
+    protected rediskeys: string[];
+
     /**
      * 
      * @param {Options} options 
@@ -76,6 +83,13 @@ class Stanchion implements StanchionContract {
             ...defaultOptions,
             ...options,
         };
+
+        this.useSingleRedisKey = typeof mergedOptions.redisKey === 'string';
+        if (this.useSingleRedisKey === true) {
+            this.redisKey = <string>mergedOptions.redisKey;
+        } else {
+            this.rediskeys = <string[]>mergedOptions.redisKey;
+        }
 
         this.options = mergedOptions;
         this.redisOptions = {
@@ -153,9 +167,27 @@ class Stanchion implements StanchionContract {
         const connection = this.getControlConnection();
         const rpush$ = Observable.bindNodeCallback<string, string, string>(connection.redis.rpush.bind(connection.redis));
 
-        const pushedReplies$ = jobs.map(job => rpush$(this.options.redisKey, JSON.stringify(job)));
+        const pushedReplies$ = jobs.map(job => rpush$(this.getRedisKeyForPush(), JSON.stringify(job)));
 
         return Observable.forkJoin(...pushedReplies$).mapTo(void 0);
+    }
+
+    /**
+     * 
+     */
+    protected getRedisKeyForPush(): string {
+        return this.useSingleRedisKey === true ?
+            this.redisKey :
+            randomInArray(this.rediskeys);
+    }
+
+    /**
+     * 
+     */
+    protected getRedisKeysForPop(): string[] {
+        return this.options.shuffleKeysOnPop === true ?
+            shuffleArray(this.rediskeys) :
+            this.rediskeys;
     }
 
     /**
@@ -174,9 +206,17 @@ class Stanchion implements StanchionContract {
         }
 
         const connection = this.getControlConnection();
-        const redisKey = this.options.redisKey;
+        const redisKeys = this.getAllRedisKeys();
+        const llen$ = Observable.bindNodeCallback<string, number>(connection.redis.llen.bind(connection.redis));
+        const sources = redisKeys.map(redisKey => llen$(redisKey));
 
-        return Observable.bindNodeCallback<string, number>(connection.redis.llen.bind(connection.redis))(redisKey);
+        return Observable.forkJoin(sources)
+            .do(sources => {
+                console.log(`test LLEN`, {
+                    sources,
+                });
+            })
+            .map(lengths => lengths.reduce((sum, length) => sum + length), 0);
     }
 
     /**
@@ -195,6 +235,15 @@ class Stanchion implements StanchionContract {
 
     /**
      * 
+     */
+    protected getAllRedisKeys(): string[] {
+        return this.useSingleRedisKey === true ?
+            [this.redisKey] :
+            this.rediskeys;
+    }
+
+    /**
+     * 
      * @param {ObservableProcessor} processor
      */
     protected react(processor: ObservableProcessor): Observable<void> {
@@ -203,7 +252,6 @@ class Stanchion implements StanchionContract {
         }
 
         const self = this;
-        const redisKey = this.options.redisKey;
 
         return Observable.create((observer: Observer<void>) => {
             const maxTicketCount = self.options.concurrency;
@@ -215,7 +263,8 @@ class Stanchion implements StanchionContract {
             // Make a new connection for every processor.
             //
             const connection = this.makeConnection();
-            const blpop$ = Observable.bindNodeCallback<string, number, string>(connection.redis.blpop.bind(connection.redis));
+
+            const blpop$: () => Observable<[string, string]> = Observable.bindNodeCallback(connection.redis.blpop.bind(connection.redis));
             self.workerConnections.push(connection);
 
             // When `Buffer$` emits a job, process it.
@@ -249,7 +298,7 @@ class Stanchion implements StanchionContract {
 
                 availableTicketCount--;
 
-                blpop$(redisKey, 0).subscribe({
+                blpop$(...this.getRedisKeysForPop(), 0).subscribe({
                     next: function unserializeJob([, serialized]) {
                         try {
                             buffer$.next(JSON.parse(serialized));

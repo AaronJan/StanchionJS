@@ -230,10 +230,15 @@ Default value:
     concurrency: 10,
     
     // Redis key for this queue.
+    // Stanchion also support multiple keys, just use:
+    //   rediskey: ['stanchion:queue1', 'stanchion:queue2'],
     redisKey: 'stanchion:queue',
     
     // How many times you want Stanchion to try reconnecting when connection is lost.
     retryAttempts: 6,
+
+    // Optional configure, default is `true`
+    shuffleKeysOnPop: true,
 }
 ```
 

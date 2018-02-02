@@ -1,7 +1,11 @@
 {
   "name": "stanchionjs",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "A simple & fast queue done right. backed by Redis, supports auto-reconnect, TypeScript, Promise and Rxjs.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AaronJan/StanchionJS"
+  },
   "keywords": [
     "stanchionjs",
     "stanchion",
@@ -36,7 +40,7 @@
     "chai": "^4.1.1",
     "mocha": "^3.5.0",
     "sinon": "^3.2.1",
-    "typescript": "^2.4.2"
+    "typescript": "^2.6.2"
   },
   "node": ">= 7.0.0"
 }
