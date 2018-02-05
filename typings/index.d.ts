@@ -22,7 +22,6 @@ export interface Options {
     redis: RedisOptions,
     concurrency: number,
     redisKey: string | string[],
-    shuffleKeysOnPop?: boolean,
     retryAttempts: number,
 }
 

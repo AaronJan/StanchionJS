@@ -39,9 +39,8 @@ const defaultOptions: Options = {
         port: 6739,
     },
     concurrency: 10,
-    redisKey: 'stanchion:queue',
+    redisKey: 'stanchion_queue',
     retryAttempts: 6,
-    shuffleKeysOnPop: true,
 };
 
 /**
@@ -71,8 +70,9 @@ class Stanchion implements StanchionContract {
     protected shutdowned$: Subject<any>;
 
     protected useSingleRedisKey: boolean;
-    protected redisKey: string;
-    protected rediskeys: string[];
+    protected redisKeys: string[];
+
+    protected roundNumberForPush: number = 0;
 
     /**
      * 
@@ -84,11 +84,16 @@ class Stanchion implements StanchionContract {
             ...options,
         };
 
-        this.useSingleRedisKey = typeof mergedOptions.redisKey === 'string';
-        if (this.useSingleRedisKey === true) {
-            this.redisKey = <string>mergedOptions.redisKey;
+        if (typeof mergedOptions.redisKey === 'string') {
+            this.useSingleRedisKey === true;
+            this.redisKeys = [mergedOptions.redisKey];
         } else {
-            this.rediskeys = <string[]>mergedOptions.redisKey;
+            this.useSingleRedisKey = mergedOptions.redisKey.length === 1;
+            this.redisKeys = mergedOptions.redisKey;
+        }
+
+        if (mergedOptions.concurrency < this.redisKeys.length) {
+            throw new Error(`concurrency must be greater than or equal to the total of Redis keys.`);
         }
 
         this.options = mergedOptions;
@@ -174,20 +179,21 @@ class Stanchion implements StanchionContract {
 
     /**
      * 
+     * @param total 
      */
-    protected getRedisKeyForPush(): string {
+    protected getRedisKey(total: number): string {
         return this.useSingleRedisKey === true ?
-            this.redisKey :
-            randomInArray(this.rediskeys);
+            this.redisKeys[0] :
+            this.redisKeys[(total % this.redisKeys.length)];
     }
 
     /**
      * 
      */
-    protected getRedisKeysForPop(): string[] {
-        return this.options.shuffleKeysOnPop === true ?
-            shuffleArray(this.rediskeys) :
-            this.rediskeys;
+    protected getRedisKeyForPush(): string {
+        this.roundNumberForPush = (this.roundNumberForPush + 1) % this.redisKeys.length;
+
+        return this.getRedisKey(this.roundNumberForPush);
     }
 
     /**
@@ -211,11 +217,6 @@ class Stanchion implements StanchionContract {
         const sources = redisKeys.map(redisKey => llen$(redisKey));
 
         return Observable.forkJoin(sources)
-            .do(sources => {
-                console.log(`test LLEN`, {
-                    sources,
-                });
-            })
             .map(lengths => lengths.reduce((sum, length) => sum + length), 0);
     }
 
@@ -237,9 +238,14 @@ class Stanchion implements StanchionContract {
      * 
      */
     protected getAllRedisKeys(): string[] {
-        return this.useSingleRedisKey === true ?
-            [this.redisKey] :
-            this.rediskeys;
+        return this.redisKeys;
+    }
+
+    /**
+     * 
+     */
+    protected getRedisKeyTotal(): number {
+        return this.redisKeys.length;
     }
 
     /**
@@ -264,55 +270,60 @@ class Stanchion implements StanchionContract {
             //
             const connection = this.makeConnection();
 
-            const blpop$: () => Observable<[string, string]> = Observable.bindNodeCallback(connection.redis.blpop.bind(connection.redis));
+            const blpop$ = Observable.bindNodeCallback<string, number, [string, string]>(connection.redis.blpop.bind(connection.redis));
             self.workerConnections.push(connection);
 
             // When `Buffer$` emits a job, process it.
             //
-            const onBufferSub = buffer$.mergeMap(processor).subscribe({
-                next: () => {
-                    done$.next();
-                },
-                error: (err: any) => {
-                    self.error$.next(err);
-                    done$.next();
-                },
-            });
+            const onBufferSub = buffer$
+                .mergeMap(processor).subscribe({
+                    next: () => {
+                        done$.next();
+                    },
+                    error: (err: any) => {
+                        self.error$.next(err);
+                        done$.next();
+                    },
+                });
 
             //
             // Main loop: fetch & done.
             //
 
-            const onDoneSub = done$.subscribe(() => {
-                availableTicketCount++;
+            const onDoneSub = done$
+                .subscribe(() => {
+                    availableTicketCount++;
 
-                if (connection.redis.connected === true) {
-                    fetching$.next();
-                }
-            });
+                    if (connection.redis.connected === true) {
+                        fetching$.next();
+                    }
+                });
 
-            const onFetchingSub = fetching$.subscribe(() => {
-                if (availableTicketCount <= 0) {
-                    return void self.error$.next(new UnexpectError(`over fetching`));
-                }
+            const redisKeyTotal = this.getRedisKeyTotal();
+            const onFetchingSub = fetching$
+                .scan(num => (num + 1) % redisKeyTotal, 0)
+                .subscribe((num) => {
+                    if (availableTicketCount <= 0) {
+                        return void self.error$.next(new UnexpectError(`over fetching`));
+                    }
 
-                availableTicketCount--;
+                    availableTicketCount--;
 
-                blpop$(...this.getRedisKeysForPop(), 0).subscribe({
-                    next: function unserializeJob([, serialized]) {
-                        try {
-                            buffer$.next(JSON.parse(serialized));
-                        } catch (err) {
+                    blpop$(this.getRedisKey(num), 0).subscribe({
+                        next: function unserializeJob([, serialized]) {
+                            try {
+                                buffer$.next(JSON.parse(serialized));
+                            } catch (err) {
+                                self.error$.next(err);
+                                done$.next();
+                            }
+                        },
+                        error: (err) => {
                             self.error$.next(err);
                             done$.next();
-                        }
-                    },
-                    error: (err) => {
-                        self.error$.next(err);
-                        done$.next();
-                    },
+                        },
+                    });
                 });
-            });
 
             //
             // Monitor connection to start processing.
